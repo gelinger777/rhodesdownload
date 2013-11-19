@@ -74,7 +74,7 @@ $("#textPercentDiv").fadeIn();
   var map_size=$( "#fileSize" ).val();
              
              var map_file="mbtiles111111.sqlite.zip.rhodownload";
-           var url='<%=url_for(:controller=>:Settings,:action=>:check_map_size)%>?map_file="'+map_file;
+           var url='<%=url_for(:controller=>:Settings,:action=>:check_download_state)%>?map_file="'+map_file;
             
              $.ajax({
                url: url,
