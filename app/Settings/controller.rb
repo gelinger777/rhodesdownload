@@ -169,9 +169,9 @@ end
 
 def wait_for_download_complete
   puts "CheckTimer "
-  if !Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.publicFolder, "mbtiles111111.sqlite.zip"))
+  if !Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip"))
     Rho::System.startTimer(200,url_for(:action => :wait_for_download_complete),"file")
-    @file_name =Rho::RhoFile.join(Rho::Application.publicFolder, "mbtiles111111.sqlite.zip.rhodownload")       
+    @file_name =Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip.rhodownload")       
     @size=File.size?(@file_name)      
     @size=@size.to_i    
     WebView.execute_js("downloaded_size('"+@size.to_s+"')")
@@ -185,12 +185,12 @@ end
 
 
 def check_map_size
-  @size2=File.size?(Rho::RhoFile.join(Rho::Application.publicFolder, "mbtiles111111.sqlite.zip")) 
+  @size2=File.size?(Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip")) 
   WebView.execute_js("update_progress2('"+@size2.to_s+"')")
   WebView.execute_js("console.log('Download Success. File saved')")
 
-  @@file_name = Rho::RhoFile.join(Rho::Application.publicFolder, "mbtiles111111.sqlite.zip")
-  @@dest=   Rho::RhoFile.join(Rho::Application.publicFolder, "mbtiles.sqlite")   
+  @@file_name = Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip")
+  @@dest=   Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles.sqlite")   
 
   Rho::System.unzipFile(@@file_name)
 
@@ -212,7 +212,7 @@ def ajax_get_mbtiles
     # Download a file to the specified filename. Be careful with the overwriteFile parameter!
     downloadfileProps = Hash.new
     downloadfileProps["url"]='http://maps.georates.net/maps/newApp/mbtiles.zip'
-    downloadfileProps["filename"] = Rho::RhoFile.join(Rho::Application.publicFolder, "mbtiles111111.sqlite.zip")
+    downloadfileProps["filename"] = Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip")
     downloadfileProps["overwriteFile"] = false
 
     Rho::Network.downloadFile(downloadfileProps, url_for(:action => :download_file_callback))
