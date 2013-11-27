@@ -212,27 +212,6 @@ def update_pois
   
 end 
 
-def show_tile
-  
-  
-  
-  
-  db = Rho::Database.new(Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles.sqlite"),"mbtiles") 
-  
-        @tiles = db.executeSql("SELECT tile_data FROM tiles WHERE zoom_level = "+@params['z']+" AND tile_column = "+@params['x']+" AND tile_row =  "+@params['y']+";")
-      
-      @output2=@tiles[0]['tile_data']
-
-        
-WebView.execute_js("console.log('"+"SELECT tile_data FROM tiles WHERE zoom_level = "+@params['z']+" AND tile_column = "+@params['x']+" AND tile_row =  "+@params['y']+";"+"')") 
- 
-        
-
-      db.close
-@response["headers"]["Content-Type"] = "image/png; charset=utf-8" 
-render :action => 'show_tile', :layout => 'tile', :use_layout_on_ajax => false
-end
-
 def detect_connection_callback
         if @params["connectionInformation"]=="Connected"
             # the server can be reached on port 443, trigger synchronization
