@@ -1,10 +1,15 @@
 <div data-role="page" id="myPageWait">
+
+<a data-role="button" href="#" onclick="javascript:go_home();return false()"> Back </a>
 <script>
-
+var downloadSize=0;
 $( '#myPageWait' ).live( 'pageinit',function(event){
+  $('#downloadButton').hide();
+   $('#cancelButton').hide();
+  $("#downloadErrorLi").hide();
   check_size();
-
-
+ 
+ 
 });
 
 
@@ -18,16 +23,20 @@ tokos=parseInt((downloaded/total)*100);
 
   update_progress(tokos,'progressBar');
 $("#percentText").html(tokos);
+
+
 }
 
 
 function downloaded_size(size,mapSize){
 
 
-
+var kbText=parseInt(parseInt(size)/1024);
 
 $("#downloaded_size").html(bytesToSize(size));
   
+
+  $("#kbText").html(kbText); 
 
 }
 
@@ -35,31 +44,67 @@ $("#downloaded_size").html(bytesToSize(size));
 function check_size(){
 
 
-  $.ajax({
+var req=  $.ajax({
        
        url: "http://maps.georates.net/maps/newApp/filesize.php",
-       success: function( data ) {
-         console.log(data.fileSize);
        
-       $( "#fileSize" ).val( parseInt(data.fileSize) );
-       
-       $( "#mapSizeMB" ).html( bytesToSize(data.fileSize));
          
-       
-       
-       
-       
-        
-          
-       },
-       dataType: "jsonp" ,
+ timeOut:4000,
+ 
+
+       dataType: "html" ,
      
      
-     });
+}) .done(function(data2){
+
+
+  console.log('Yes! Success!');
+       
+       data=jQuery.parseJSON(data2);
+       
+    
+              
+             
+                if(!data.fileSize){
+                        
+                          download_failed("Seems you are not online. We cannot reach our server to get the size of map file. Please try again later. ");
+                        
+                        
+                        }
+                        
+                        else{
+                
+                
+                
+                $( "#fileSize" ).val( parseInt(data.fileSize) );
+              
+              $( "#mapSizeMB" ).html( bytesToSize(data.fileSize));
+                
+                          $('#textInfo').show();
+                $('#downloadButton').show();
+              downloadSize= parseInt(data.fileSize);
+               
+                        }
+
+
+
+
+}).fail(function(jqXHR, sStatus, oError) {
+
+  console.log(sStatus);
+  
+                  download_failed("Seems you are not online. We cannot reach our server to get the size of map file. Please try again later. ");
+                                          
+                  console.log(oError);
+});
+  
+               
+ 
+  req.success(function(data2) {
      
-    
-    
-    
+                
+  });
+
     
     
  
@@ -71,10 +116,32 @@ function check_size(){
 function pingSize(){
 
 $("#textPercentDiv").fadeIn();
+  $("#kbDiv").fadeIn();
   var map_size=$( "#fileSize" ).val();
              
              var map_file="mbtiles111111.sqlite.zip.rhodownload";
-           var url='<%=url_for(:controller=>:Settings,:action=>:check_download_state)%>?map_file="'+map_file;
+  var url='<%=url_for(:controller=>:Settings,:action=>:check_download_state)%>?map_file='+map_file+'&mapSize='+map_size;
+            
+             $.ajax({
+               url: url,
+               cache: false,
+              
+             } );
+
+
+}
+
+
+function stop_timer(){
+
+$("#textPercentDiv").fadeOut();
+
+  $('#spinner').fadeOut();
+   $('#downloadButton').show();
+   
+  $("#cancelButton").hide();
+ 
+  var url='<%=url_for(:controller=>:Settings,:action=>:stop_timer)%>';
             
              $.ajax({
                url: url,
@@ -84,17 +151,28 @@ $("#textPercentDiv").fadeIn();
 
 }
 
-
+  function go_home(){
+  
+  
+  stop_timer();
+  
+  
+    window.location = "<%= Rho::RhoConfig.start_path %>";
+  
+  
+  
+  }
 function get_map(){
+ 
+  $('#spinner').show();
+  $('#downloadButton').hide();
   
-  
-  
-
+ $("#cancelButton").show();
 
  data= new Object();
  
     console.log("sksem");
-        var url2='<%=url_for(:controller=>:Settings,:action=>:ajax_get_mbtiles)%>';
+        var url2='<%=url_for(:controller=>:Settings,:action=>:ajax_get_mbtiles)%>?mapSize='+downloadSize;
            
           
   $.get(url2);
@@ -118,7 +196,16 @@ function get_map(){
 
 
 
-  
+function download_failed(msg){
+
+  $("#downloadErrorli").show();
+$("#downloadErrorMsg").html(msg);
+
+$()
+
+
+
+}
   
 
 
@@ -126,10 +213,14 @@ function finalizeMap(){
 
 
 
-alert("iiiii");
+alert("Map Download is Finished.");
 $("#downloadMapStatus").hide();
 
   $("#download_finished").show();
+  
+  
+  $('#downloadButton').show();
+   $('#cancelButton').hide();
 
 
 }
@@ -143,6 +234,16 @@ $("#downloadMapStatus").hide();
     <h1>   Please wait...</h1>
     
   </div>
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
 
   <div data-role="content">
    
@@ -156,9 +257,9 @@ $("#downloadMapStatus").hide();
   
   
 <div class="ui-grid-b" id="statusSpinner">
-  <div class="ui-block-a" style="width:33%">  </div>
+  <div class="ui-block-a" style="width:33%"><div id="kbDiv" style="display:none">Size:<span id="kbText">-</span>KB </div> </div>
   <div class="ui-block-b">    <div id="spinner" style="display:none;text-align:center;"><img src="/public/images/loadingFile.GIF"></div></div>
-  <div class="ui-block-c" style="width:33%"><div id="textPercentDiv" style="display:none">Completed: <span id="percentText">-</span>%  </div></div>
+  <div class="ui-block-c" style="width:33%"><div id="textPercentDiv" style="display:none">Done: <span id="percentText">-</span>%  </div></div>
 </div><!-- /grid-b -->
   
   
@@ -172,24 +273,25 @@ $("#downloadMapStatus").hide();
 
     <ul data-role="listview" style="top:20px;" id="download_ul">
     
+  <li id="downloadErrorLi" > <span style="color:red;font-weight:bold;" id="downloadErrorMsg"></span><a href='/app/index.erb' rel='external'>Back to MainPage</a> </li>
+    
+    <li data-role="heading" id="textInfo" style="display:none;">Downloaded <span id="downloaded_size" style="color:red;"><%= @size%>MB</span> from <span id="mapSizeMB" style="color:green !important;"> </span> </li>
+
+    
+
+  <% 
   
-    
-    <li data-role="heading" >Downloaded</li>
-    
-    <li id="downloaded_size">--</li>
-    
-    <li data-role="heading"> from</li>
-    
-<li id="mapSizeMB"> </li>
   
+  
+  %>
   
 </ul>
       
       
       
       <ul id="cancel_download" selected="true" title="Wait">
-  <li id="downloadButton"><a href="#" onclick="javascript: $('#spinner').show();$('#downloadButton').hide(); get_map();return false;" data-role="button">Start</a></li>
-          <li><a href="<%=url_for :action => :cancel_httpcall%>" data-role="button">Cancel Download</a></li>
+  <li id="downloadButton" ><a  disabled="disabled" href="#" onclick="javascript: get_map();return false;" data-role="button"><%= @downloadText%></a></li>
+     <li  id="cancelButton"> If you feel it's frozen too loong time, please try to Pause and Restart Download.  <a   href="#" onclick="javascript:stop_timer();return false;" data-role="button">Pause Download</a></li>
           <br/><br/>
       </ul>
 
