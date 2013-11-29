@@ -6,3 +6,5 @@ sim-*
 # build output
 bin/
 public/api/generated/
+project/iphone/Rhodes/build/
+project/iphone/build/

@@ -327,12 +327,14 @@ end
 
 def wait_for_download_complete
   puts "CheckTimer "
-  Rho::System.startTimer(2000,url_for(:action => :wait_for_download_complete))
-  if !Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip"))
 
-    @file_name =Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip.rhodownload")       
-    @size=File.size?(@file_name)      
-    @size=@size.to_i    
+  Rho::System.startTimer(2000,url_for(:action => :wait_for_download_complete))
+  
+  status = Rho::Network.getCurrentTransferProgress()
+  puts status.inspect
+  
+  if status["current_status"] == "true"      
+    @size=status["download_current"].to_i    
     WebView.execute_js("downloaded_size('"+@size.to_s+"')")
     WebView.execute_js("console.log('"+@size.to_s+"')")   
     WebView.execute_js("update_progress2('"+@size.to_s+"')")
