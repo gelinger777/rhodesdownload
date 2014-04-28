@@ -21,5 +21,5 @@ symbian:
 android:
   version: "2.3.3"
   emulator: "myAvd"
-extensions:
-  - rhoconnect-client
+extensions: ["net-http", "thread", "timeout", "uri", "json"]
+capabilities: ["gps"]

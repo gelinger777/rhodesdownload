@@ -1,0 +1,1 @@
+/Users/armen/Desktop/rhodownload/project/iphone/Rhodes/build/Rhodes.build/Debug-iphoneos/Rhodes.build/libCoreAPI.a

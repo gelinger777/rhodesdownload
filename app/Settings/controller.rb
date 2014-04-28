@@ -18,55 +18,8 @@ class SettingsController < Rho::RhoController
     
     render :credits
   end
-  
-  def show_location
-    
-    
-    # check if we know our position   
-    if !GeoLocation.known_position?
-      render :action=>:show_map
-      # wait till GPS receiver acquire position
-      GeoLocation.set_notification( url_for(:action => :geo_callback), "",10)
-  
-    
-    else
-      WebView.execute_js("updateLocation('"+GeoLocation.latitude.to_s+"','"+GeoLocation.longitude.to_s+"','"+GeoLocation.accuracy.to_s+"')")
-          
-   
-    
-    end
-  end
  
-  def geo_callback
-    
-    if WebView.current_location !~ /Settings/
-        
-            GeoLocation.turnoff
-            return
-        end
-    
-    
-    
-    # navigate to `show_location` page if GPS receiver acquire position  
-    if @params['known_position'].to_i != 0 && @params['status'] =='ok'    
-     #WebView.navigate url_for(:action => :show_map) 
-      WebView.execute_js("updateLocation('"+GeoLocation.latitude.to_s+"','"+GeoLocation.longitude.to_s+"','"+GeoLocation.accuracy.to_s+"')")
-       
-   
-    end   
-    # show error if timeout expired and GPS receiver didn't acquire position
-    if @params['available'].to_i == 0 || @params['status'] !='ok'
- WebView.execute_js("show_gps_error()")
-      # WebView.execute_js("updateLocation('40.18417669241183','44.51487958431244','50')")
-            
-     
-
-     
-    end
-    # do nothing, still wait for location 
-  end
-  
-  def map_settings
+   def map_settings
     
     
     render :map_settings
@@ -212,6 +165,27 @@ def update_pois
   
 end 
 
+def show_tile
+  
+  
+  
+  
+  db = Rho::Database.new(Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles.sqlite"),"mbtiles") 
+  
+        @tiles = db.executeSql("SELECT tile_data FROM tiles WHERE zoom_level = "+@params['z']+" AND tile_column = "+@params['x']+" AND tile_row =  "+@params['y']+";")
+      
+      @output2=@tiles[0]['tile_data']
+
+        
+WebView.execute_js("console.log('"+"SELECT tile_data FROM tiles WHERE zoom_level = "+@params['z']+" AND tile_column = "+@params['x']+" AND tile_row =  "+@params['y']+";"+"')") 
+ 
+        
+
+      db.close
+@response["headers"]["Content-Type"] = "image/png; charset=utf-8" 
+render :action => 'show_tile', :layout => 'tile', :use_layout_on_ajax => false
+end
+
 def detect_connection_callback
         if @params["connectionInformation"]=="Connected"
             # the server can be reached on port 443, trigger synchronization
@@ -250,7 +224,7 @@ def do_first_reset
     
     
     
-  if !Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip.rhodownload"))
+  if !Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip.rhodownload"))
       
       @downloadText="Download Map"
       
@@ -259,11 +233,9 @@ def do_first_reset
     else
       @downloadText="Continue Download Map"
       
-      @file_name2 =Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip.rhodownload")       
+      @file_name2 =Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip.rhodownload")       
       @size=File.size?(@file_name2)  
-        
-        
-        @size=@size.to_i/(1024*1024)
+      @size=@size.to_i/(1024*1024)
    
       
     end
@@ -321,20 +293,27 @@ end
 
 
 def check_download_state
-  Rho::System.startTimer(2000,url_for(:action => :wait_for_download_complete))
+  Rho::System.startTimer(2000,url_for(:action => :wait_for_download_complete),"file")
   puts "startTimer "
 end
 
+
+
+
+
+
+
 def wait_for_download_complete
   puts "CheckTimer "
-
-  Rho::System.startTimer(2000,url_for(:action => :wait_for_download_complete))
+  if !Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5] , "mbtiles111111.sqlite.zip"))
+    Rho::System.startTimer(2000,url_for(:action => :wait_for_download_complete),"file")
+    @file_name = Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip.rhodownload")       
+       
+@size=File.size?(@file_name)  
   
-  status = Rho::Network.getCurrentTransferProgress()
-  puts status.inspect
-  
-  if status["current_status"] == "true"      
-    @size=status["download_current"].to_i    
+    
+    
+    
     WebView.execute_js("downloaded_size('"+@size.to_s+"')")
     WebView.execute_js("console.log('"+@size.to_s+"')")   
     WebView.execute_js("update_progress2('"+@size.to_s+"')")
@@ -346,17 +325,25 @@ end
 
 
 
+
+
+
+
+
 def finalize_map_size
-  @size2=File.size?(Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip")) 
+  @size2=File.size?(Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip")) 
   WebView.execute_js("update_progress2('"+@size2.to_s+"')")
   WebView.execute_js("console.log('Download Success. File saved')")
 
-  @@file_name = Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip")
-  @@dest=   Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles.sqlite")   
+  @@file_name = Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip")
+  @@dest=   Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles.sqlite")   
 
   Rho::RhoFile.deleteFile(@@dest)
 
   Rho::System.unzipFile(@@file_name)
+  
+ @@rename=Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "hiVienna.sqlite");
+ Rho::RhoFile.rename(@@rename,@@dest)
 
   Rho::RhoFile.deleteFile(@@file_name)
 
@@ -370,8 +357,8 @@ end
 
 def ajax_get_mbtiles
   downloadfileProps = Hash.new
-          downloadfileProps["url"]='http://maps.georates.net/maps/newApp/mbtiles.zip'
-          downloadfileProps["filename"] = Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip")
+          downloadfileProps["url"]='http://maps.georates.net/maps/tilemill/hiVienna.sqlite.zip'
+          downloadfileProps["filename"] = Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip")
           downloadfileProps["overwriteFile"] = false
   if Rho::Network.hasNetwork != true
     WebView.execute_js("alert('No Internet Connection')")
@@ -384,12 +371,12 @@ def ajax_get_mbtiles
     
   end
   
-  if (Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip")) )
+  if (Rho::RhoFile.exists(Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip")) )
        
  
     
     
-    @ff2=Rho::RhoFile.join(Rho::Application.userFolder, "mbtiles111111.sqlite.zip");
+    @ff2=Rho::RhoFile.join(Rho::Application.appsBundleFolder[0...-5], "mbtiles111111.sqlite.zip");
          
          @size2=File.size?(@ff2)  
          

@@ -12,12 +12,12 @@ rhobundle_zip_pwd = nil
 
 # Rhodes log properties
 # log level
-# 0-trace, 1-info(app level), 2-warnings, 3-errors
+# 0-trace, 1-info(app level), 3-warnings, 4-errors
 # for production set to 3
-MinSeverity  = 1 
+MinSeverity  = 3
 
 # enable copy log messages to standard output, useful for debugging
-LogToOutput = 1
+LogToOutput = 0
 
 # '*' means all categories, otherwise list them : Cat1, Cat2 
 LogCategories = *
@@ -26,32 +26,33 @@ LogCategories = *
 ExcludeLogCategories = 
 
 # max log file size in Bytes, set 0 to unlimited size; when limit is reached, log wraps to beginning of file
-MaxLogFileSize=50000
+MaxLogFileSize=500
 
 # turn on local http server traces, off by default
-#net_trace = 0
+net_trace = 0
 
 # timeout of network requests in seconds (30 by default)
-#net_timeout = 60
+net_timeout = 15000
 
 # where log will be posted by RhoConf.send_log or from the log menu  
 # source is also open and up on http://github.com/rhomobile/rhologs, so you can deploy your own logserver
 logserver = 'http://rhologs.heroku.com' 
 
 # log file prefix - contain human-readable text
-logname='rhodownload'
+logname='NewMap'
 
 # Keep track of the last visited page
 KeepTrackOfLastVisitedPage = 0 
 LastVisitedPage = ''
 
-# sync server url, typically this will look like 'http://<hostname>:<port>'
-# for example: 'http://localhost:9292'
+# sync server url, typically this will look like 'http://<hostname>:<port>/application'
+# for example: 'http://localhost:9292/application'
 syncserver = ''
-sync_poll_interval=0
 
+
+gps_ping_timeout_sec = 30
 # geo location inactivity timeout (in seconds)
-#geo_location_inactivity_timeout = 30
+geo_location_inactivity_timeout = 300
 
 # open rhodes app in full screen mode
 # default 1 for Android up to Rhodes 2.2.5.
@@ -59,7 +60,7 @@ sync_poll_interval=0
 #full_screen = 1
 
 # disable the Android page loading progress bar
-#disable_loading_indication = 0
+disable_loading_indication = 0
 
 # Port of the local (embedded) HTTP server. This parameter is mainly for debug purposes.
 # If not specified, application will use dynamically selected one.
@@ -70,7 +71,7 @@ sync_poll_interval=0
 #wm_show_statusbar = 1
 
 # disable screen rotation (enabled by default) - disable possible for ANDROID and iPhone ONLY
-#disable_screen_rotation = 1
+disable_screen_rotation = 1
 
 # disable close app when pressing back on home screen on blackberry
 #bb_disable_closebyback = 0
@@ -85,5 +86,3 @@ sync_poll_interval=0
 jqtouch_mode=1
 
 splash_screen='zoom'
-
-use_bb_full_browser=6
